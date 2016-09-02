@@ -6,22 +6,31 @@ Fields
 
 ### Computer Engineering / Science
 
-- Algorithms
-- Networking
-- Operating systems
-- Graphics
-- Embedded systems
-- etc.
+|       Field       | Proficiency | Since |
+| ----------------- | ----------- | ----- |
+| Acoustics         | 🌟🌟🌟🌟・      |  2002 |
+| Algorithms        | 🌟🌟🌟🌟・      |  2001 |
+| Computer graphics | 🌟🌟🌟🌟🌟       |  2001 |
+| Embedded systems  | 🌟🌟🌟🌟・      |  2012 |
+| Game development  | 🌟🌟・・・    |  2001 |
+| Hardware          | 🌟🌟🌟・・     |  2014 |
+| Machine learning  | 🌟🌟・・・    |  2016 |
+| Networking        | 🌟🌟🌟・・     |  2006 |
+| Operating systems | 🌟🌟🌟・・     |  2014 |
+| Web               | 🌟🌟🌟🌟・      |  2002 |
+
 
 ### Uncategorized
 
-- Design
+- Art
+  - Digital painting/drawing
+  - Vector art
   - Web design
-- Computer-generated Imagery
-  - 3D polygonal modeling and design
-  - texturing
+  - Computer-generated Imagery
+    - 3D polygonal modeling and design
+    - texturing
 - Electronic circuit design
-  - Analog (low frquency)
+  - Analog (LF)
   - Digital
 
 Languages
@@ -37,7 +46,7 @@ Languages
 | CoffeeScript                  | 🌟🌟🌟🌟🌟       | 2013  |            |                     |
 | Coq                           | 🌟・・・・   | 2014  |            |                     |
 | C++                           | 🌟🌟🌟🌟・      | 2001  |            | C++14               |
-| C#                            | 🌟🌟🌟🌟・      | ?     | C# 4.0     | C# 4.0              |
+| C#                            | 🌟🌟🌟🌟・      | ?     | C# 4.0     | C# 6.0              |
 | D                             | 🌟・・・・   | ?     |            |                     |
 | F#                            | 🌟🌟・・・    | 2013  |            |                     |
 | Go                            | 🌟🌟🌟🌟・      | 2014  |            |                     |
@@ -130,8 +139,8 @@ My own creations: tcw, tcwtecs, tcw2
 | ---------- | ----------- | ----- |
 | x86        | 🌟🌟・・・    | ?     |
 | x86_64     | 🌟🌟・・・    | ?     |
-| ARM-A      | 🌟🌟🌟・・     | 2009  |
-| ARM-M      | 🌟🌟🌟・・     | 2012  |
+| ARM-A      | 🌟🌟・・・    | 2009  |
+| ARM-M      | 🌟🌟🌟🌟・      | 2012  |
 
 ### Game Engines
 
@@ -139,9 +148,14 @@ My own creations: tcw, tcwtecs, tcw2
 | ------------- | ----------- | ----- | ------------------- |
 | id Tech       | 🌟🌟🌟・・     | 2013  | id Tech 3           |
 | Unity         | 🌟🌟・・・    | ?     | Unity 5             |
+| Cocos Creator | 🌟🌟・・・    | 2016  | Cocos Creator 1.x   |
 | Unreal Engine | 🌟・・・・   | ?     | Unreal Engine 4     |
 
-My own creations: OpenSpades Engine
+### Machine Learning
+
+| Technology | Proficiency | Since |
+| ---------- | ----------- | ----- |
+| Caffe      | 🌟🌟・・・    |  2016 |
 
 ### Web Frameworks / Libraries
 
@@ -164,18 +178,21 @@ Softwares
 
 - Adobe Photoshop
 - Adobe Illustrator
-  - Web Design
+    - Web Design
 - Blender
-  - Character Modeling
-  - Physics Simulation
-  - Still Image Creation
-- Shade
+    - Character Modeling
+    - Physics Simulation
+    - Still Image Creation
+- Mirye Shade 3D 9 (outdated)
+- NewTek LightWave 9? (outdated)
 - Substance Painter (learning)
 - GIMP
 - Inkscape
+- Procreate
 
 ### Audio
 
+- Audacity
 - Logic Pro
 - Adobe Audition
 
@@ -183,24 +200,25 @@ Softwares
 
 - Apple Motion
 - Adobe After Effects
-- Adobe Flash
+- Adobe Flash / Animate
 
 ### Web
 
 - Adobe Dreamweaver
+- Brackets
 
 ### Office Suite
 
 - Microsoft Office
-  - Word
-  - Excel
-  - PowerPoint
-  - Access
-  - Outlook
+    - Word
+    - Excel
+    - PowerPoint
+    - Access
+    - Outlook
 - Apple Productivity Apps
-  - Numbers
-  - Pages
-  - Keynote
+    - Numbers
+    - Pages
+    - Keynote
 
 Qualifications
 --------------
