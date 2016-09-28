@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>MU Maximizer by @YVT (Public Domain)</title>
+    </head>
+    <body>
+        <canvas id="canvas" width="512" height="512" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%;"></canvas>
+        <select id="mode-select" style="position: absolute; left: 10px; top: 10px;">
+        <option value="mu">Mind Units</option>
+        <option value="ap">Action Points</option>
+        </select>
+        <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script type="text/javascript">
+$(function() {
+
+	var points = [];
+	var $canvas = $('#canvas');
+	var hoverPointIndex = null;
+	var links = null;
+	var tris = null;
+
+	function makeLink(a, b)
+	{
+		var x = Math.min(a, b);
+		var y = Math.max(a, b);
+		return x | (y << 16);
+	}
+	function expandLink1(l)
+	{
+		return l & 0xffff;
+	}
+	function expandLink2(l)
+	{
+		return l >>> 16;
+	}
+	function expandLink(l)
+	{
+		return [expandLink1(l), expandLink2(l)];
+	}
+
+	function lineSegmentIntersects(
+		x1, y1, x2, y2,
+		x3, y3, x4, y4)
+	{
+		// Bounding box test
+		if (Math.min(x1, x2) > Math.max(x3, x4))
+			return false;
+		if (Math.max(x1, x2) < Math.min(x3, x4))
+			return false;
+
+		if (Math.min(y1, y2) > Math.max(y3, y4))
+			return false;
+		if (Math.max(y1, y2) < Math.min(y3, y4))
+			return false;
+
+		var dx = x2 - x1;
+		var dy = y2 - y1;
+		var b1 = (x3 - x1) * dy - (y3 - y1) * dx;
+		var b2 = (x4 - x1) * dy - (y4 - y1) * dx;
+		if ((b1 > 0) == (b2 > 0)) {
+			// The line (x1, y1)-(x2, y2) and
+			// the line segement (x3, y3)-(x4, y4)
+			// does not intersect
+			return false;
+		}
+
+		dx = x4 - x3;
+		dy = y4 - y3;
+		b1 = (x1 - x3) * dy - (y1 - y3) * dx;
+		b2 = (x2 - x3) * dy - (y2 - y3) * dx;
+		if ((b1 > 0) == (b2 > 0)) {
+			// The line segement (x1, y1)-(x2, y2) and
+			// the line (x3, y3)-(x4, y4)
+			// does not intersect
+			return false;
+		}
+		return true;
+	}
+	function lineSegmentIntersects2(
+		p1, p2, p3, p4)
+	{
+		return lineSegmentIntersects(
+			p1.x, p1.y, p2.x, p2.y,
+			p3.x, p3.y, p4.x, p4.y);
+	}
+	function lineSegmentIntersectsSomeLinks(i1, i2) 
+	{
+		var p1 = points[i1];
+		var p2 = points[i2];
+		for (var i = 0; i < links.length; ++i) {
+			var link = links[i];
+			var k1 = expandLink1(link);
+			var k2 = expandLink2(link);
+			if (k1 == i1 && k2 == i2 ||
+				k1 == i2 && k2 == i1)
+				return -1;
+			if (k1 === i1 || k1 === i2 ||
+				k2 === i1 || k2 === i2)
+				continue;
+			if (lineSegmentIntersects2(p1, p2, points[k1], points[k2]))
+				return 1;
+		}
+		return 0;
+	}
+
+	function getTriangleArea(x1, y1, x2, y2, x3, y3)
+	{
+		x2 -= x1; y2 -= y1;
+		x3 -= x1; y3 -= y1;
+		return x2 * y3 - x3 * y2;
+	}
+	function getTriangleAreaByIndex(p1, p2, p3)
+	{
+		p1 = points[p1]; p2 = points[p2]; p3 = points[p3];
+		return getTriangleArea(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+	}
+
+	var dragPoint = false;
+	var dragWasClick;
+	var dragStartPos = null;
+	var dragStartTime = null;
+	var lastClickIndex = null;
+	var lastClickTime = null;
+	function pointsUpdated()
+	{
+    	hoverPointIndex = null;
+    	lastClickTime = null;
+    	lastClickIndex = null;
+	}
+	$canvas.mousedown(function(e) {
+        var x = e.pageX - $(this).offset().left;
+        var y = e.pageY - $(this).offset().top;
+        var pt = hoverPointIndex;
+        if (pt != null) {
+        	//points.splice(pt, 1);
+        	dragPoint = true;
+        	dragStartPos = {x: x, y: y};
+        	dragStartTime = new Date().getTime();
+        	dragWasClick = true;
+        } else if (points.length < 7) {
+        	points.push({
+        		x: x, y: y
+        	});
+        	pointsUpdated();
+        	dragPoint = true;
+        	dragStartPos = {x: x, y: y};
+        	dragStartTime = new Date().getTime();
+        	dragWasClick = false;
+        	hoverPointIndex = points.length - 1;
+        }
+        links = null;
+
+        solve();
+        render();
+	});
+	$canvas.mousemove(function(e) {
+        var x = e.pageX - $(this).offset().left;
+        var y = e.pageY - $(this).offset().top;
+		if (dragPoint && hoverPointIndex != null) {
+			if (Math.abs(x - dragStartPos.x) + Math.abs(y - dragStartPos.y) > 5) {
+				dragWasClick = false;
+			}
+			points[hoverPointIndex] = {
+				x: x, y: y
+			};
+	        links = null;
+
+	        solve();
+	        render();
+			return;
+		}
+        hoverPointIndex = hitTest(x, y);
+        render();
+    });
+    $canvas.mouseup(function(e) {
+    	if (dragPoint) {
+    		if (new Date().getTime() > dragStartTime + 500) {
+    			dragWasClick = false;
+    		}
+    		if (dragWasClick) {
+    			if (lastClickTime != null && lastClickIndex != null &&
+    				dragStartTime - lastClickTime < 300 && lastClickIndex === hoverPointIndex) {
+    				// Double click
+	    			points.splice(hoverPointIndex, 1);
+	        		pointsUpdated();
+			        solve();
+			        render();
+    			}
+    			lastClickTime = new Date().getTime();
+    			lastClickIndex = hoverPointIndex;
+    		}
+    	}
+    	dragPoint = false;
+    });	
+
+	function hitTest(x, y)
+	{
+		var minI = null, minD = 0;
+		for (var i = 0; i < points.length; ++i) {
+			var dx = points[i].x - x;
+			var dy = points[i].y - y;
+			var sq = dx * dx + dy * dy;
+			if (sq < 15 * 15) {
+				if (minI == null || sq < minD) {
+					minI = i; minD = sq;
+				}
+			}
+		}
+		return minI;
+	}
+
+	function render()
+	{
+		var canvas = $canvas[0];
+		canvas.width = $canvas.width();
+		canvas.height = $canvas.height();
+		
+		var ctx = canvas.getContext('2d');
+		var width = canvas.width;
+		var height = canvas.height;
+
+		ctx.strokeStyle = '#afafaf';
+		ctx.beginPath();
+		for (var x = 0.5; x < width; x += 40) {
+			ctx.moveTo(x, 0);
+			ctx.lineTo(x, height);
+		}
+		for (var y = 0.5; y < height; y += 40) {
+			ctx.moveTo(0, y);
+			ctx.lineTo(width, y);
+		}
+		ctx.stroke();
+
+		if (tris) {
+			ctx.fillStyle = "rgba(255,0,0,0.1)";
+
+			for (var i = 0; i < tris.length; i += 3) {
+				var pt1 = points[tris[i]];
+				var pt2 = points[tris[i+1]];
+				var pt3 = points[tris[i+2]];
+				ctx.beginPath();
+				ctx.moveTo(pt1.x, pt1.y);
+				ctx.lineTo(pt2.x, pt2.y);
+				ctx.lineTo(pt3.x, pt3.y);
+				ctx.fill();
+			}
+		}
+
+		if (links) {
+			ctx.strokeStyle = 'red';
+			ctx.lineWidth = 3;
+			
+			ctx.beginPath();
+			for (var i = 0; i < links.length; ++i) {
+				var link = expandLink(links[i]);
+				var pt1 = points[link[0]];
+				var pt2 = points[link[1]];
+				ctx.moveTo(pt1.x, pt1.y);
+				ctx.lineTo(pt2.x, pt2.y);
+			}
+
+			ctx.stroke();
+
+			ctx.lineWidth = 1;
+		}
+
+		ctx.strokeStyle = 'black';
+		for (var i = 0; i < points.length; ++i) {
+			var pt = points[i];
+			ctx.beginPath();
+			ctx.arc(pt.x, pt.y, 5, 0, 2 * Math.PI, false);
+			ctx.fillStyle = 'black';
+			ctx.fill();
+			if (i === hoverPointIndex) {
+				ctx.beginPath();
+				ctx.arc(pt.x, pt.y, 10, 0, 2 * Math.PI, false);
+				ctx.stroke();
+			}
+		}
+
+		ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+		ctx.font = "14px sans-serif";
+		ctx.fillText("Click and drag to create a portal (up to 7 portals). Double click to delete a portal.", 10, height - 10);
+	}
+
+
+	function solve()
+	{
+		var currentArea = 0;
+		var bestScore = 0;
+		var best = [];
+		var bestTris = [];
+		var linkMap = [];
+
+		// Statistics
+		var numSolutions = 0;
+		var numRejected = 0;
+
+		links = [];
+		tris = [];
+
+		function addLink(link)
+		{
+			if (!linkMap[link]) {
+				links.push(link);
+				linkMap[link] = 1;
+			} else {
+				linkMap[link]++;
+			}
+			return link;
+		}
+
+		function removeLink(link)
+		{
+			linkMap[link]--;
+			if (!linkMap[link]) {
+				links.pop();
+			}
+		}
+
+		var evaluator = function() { return 0; }
+		switch ($('#mode-select').val())
+		{
+		case 'mu':
+			evaluator = function() {
+				return currentArea;
+			};
+			break;
+		case 'ap':
+			evaluator = function() {
+				return links.length * 313 + tris.length * (1250/3);
+			};
+			break;
+		}
+
+		function subsolve(start, startI, startJ)
+		{	
+			if (start >= points.length) {
+				// Solved
+				++numSolutions;
+				var score = evaluator();
+				if (score > bestScore) {
+					bestScore = score;
+					best = links.slice(0);
+					bestTris = tris.slice(0);
+				}
+				return;
+			}
+			// The first point is `start`.
+
+			// Choose the second point
+			for (var i = startI; i < points.length - 1; ++i) {
+				var intersect1 = lineSegmentIntersectsSomeLinks(start, i);
+				if (intersect1 > 0) {
+					numRejected++;
+					continue; // Not feasible.
+				}
+				for (var j = i === startI ? startJ : i + 1; j < points.length; ++j) {
+					var intersect2 = lineSegmentIntersectsSomeLinks(start, j);
+					var intersect3 = lineSegmentIntersectsSomeLinks(i, j);
+					if (intersect2 > 0) {
+						numRejected++;
+						continue; // Not feasible.
+					}
+					if (intersect3 > 0) {
+						numRejected++;
+						continue; // Not feasible.
+					}
+
+					// Branch.
+					var oldArea = currentArea;
+					var l1 = addLink(makeLink(start, i));
+					var l2 = addLink(makeLink(start, j));
+					var l3 = addLink(makeLink(j, i));
+					tris.push(i); tris.push(start); tris.push(j);
+
+					currentArea += Math.abs(getTriangleAreaByIndex(start, i, j));
+
+					var nextJ = j + 1;
+					var nextI = i;
+					if (nextJ === points.length) {
+						++nextI; nextJ = nextI + 1;
+					}
+					subsolve(start, nextI, nextJ);
+
+					removeLink(l3);
+					removeLink(l2);
+					removeLink(l1);
+					tris.pop(); tris.pop(); tris.pop();
+					currentArea = oldArea;
+				}
+			}
+
+			// Another first point...
+			subsolve(start + 1, start + 2, start + 3);
+		}
+
+		subsolve(0, 1, 2);
+		links = best;
+		tris = bestTris;
+
+		console.log(numSolutions + "solutions detected, " + numRejected + " moves rejected");
+	}
+
+
+	render();
+
+	$(window).resize(render);
+	$('#mode-select').change(function() {
+		solve(); render();
+	});
+});
+        </script>
+    </body>
+</html>
