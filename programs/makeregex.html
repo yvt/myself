@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>Construct Regex that accept multiples of an integer</title>
+        <style type="text/css">
+            pre {
+                background: #fafafa;
+                padding: 10px;
+                border-radius: 4px;
+                box-shadow: 0px 1px 4px rgba(0,0,0,0.05) inset;
+                white-space: normal;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Construct Regex that accept multiples of an integer</h1>
+        <p>
+            <a href="https://yvt.jp/">Author</a>
+        </p>
+        <p>
+            Multiples of <input id="valueField" value="3">
+            in base
+            <select id="baseField">
+                <option value="01">2</option>
+                <option value="0123456789">10</option>
+                <option value="0123456789abcdef">16</option>
+                <option value="0123456789abcdefghijklmnopqrstuvwxyz">36</option>
+            </select>
+            <button id="runButton">Construct</button>
+        </p>
+        <pre>Result is shown here</pre>
+        <script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script>
+$(() => {
+    function constructRegexForMultiples(intValue, digits)
+    {
+        "use strict";
+
+        function State()
+        {
+            this.inflow = new Map(); // Map<State, RENode>
+            this.outflow = new Map();
+        }
+
+        function REEmpty()
+        {
+        }
+        REEmpty.prototype.getText = function () {
+            return "";
+        };
+        REEmpty.prototype.or = function (other) {
+            function canBeEmpty(node)
+            {
+                if (node === REEmptyInstance) {
+                    return true;
+                } else if (node instanceof REChoice) {
+                    var found = false;
+                    node.choices.forEach(function (subnode) {
+                        if (canBeEmpty(subnode)) {
+                            found = true;
+                        }
+                    });
+                    return found;
+                } else if (node instanceof REConcat) {
+                    var items = node.items;
+                    for (var i = 0; i < items.length; ++i) {
+                        if (!canBeEmpty(items[i])) {
+                            return false;
+                        }
+                    }
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            if (canBeEmpty(other)) {
+                return other;
+            }
+            if (other === REEmptyInstance) {
+                return this;
+            } else if (other instanceof REChoice) {
+                return other.cloneWithItemAdded(REEmptyInstance);
+            } else if (other instanceof RERepeat) {
+                if (other.nonZero) {
+                    return new RERepeat(other, false);
+                } else {
+                    return other;
+                }
+            } else{
+                return new REChoice(new Map([
+                    ["", REEmptyInstance],
+                    [other.getText(), other]
+                ]));
+            }
+        };
+        REEmpty.prototype.concat = function (other) {
+            return other;
+        };
+        REEmpty.prototype.makeRepeat = function ()
+        {
+            return this;
+        };
+        var REEmptyInstance = new REEmpty();
+
+        function REChoice(choices)
+        {
+            this.choices = choices; // Map<String, RENode>
+            this.regex = null;
+        }
+        REChoice.prototype.getText = function () {
+            return this.regex || (this.regex = (() => {
+                var parts = ["("];
+                var iter = this.choices.entries();
+                var it;
+                var foundNonSingleChar = false;
+                var parts2 = [];
+                while (it = iter.next(), !it.done) {
+                    if (parts.length > 1) {
+                        parts.push("|");
+                        parts.push(it.value[0]);
+                    } else {
+                        parts.push(it.value[0]);
+                    }
+                    if (!foundNonSingleChar &&
+                        (!(it.value[1] instanceof RETerminal) ||
+                        it.value[1].text.length > 1)) {
+                        foundNonSingleChar = true;
+                    }
+                    if (!foundNonSingleChar) {
+                        parts2.push(it.value[0]);
+                    }
+                }
+                if (!foundNonSingleChar) {
+                    return "[" + parts2.join("") + "]";
+                }
+                parts.push(")");
+                return parts.join("");
+            })());
+        };
+        REChoice.prototype.cloneWithItemAdded = function (newItem)
+        {
+            var choices = new Map(this.choices);
+            choices.set(newItem.getText(), newItem);
+            return new REChoice(choices);
+        };
+        REChoice.prototype.or = function (other)
+        {
+            if (other === REEmptyInstance) {
+                return other.or(this);
+            }
+            var choices = new Map(this.choices);
+            if (other instanceof REChoice) {
+                other.items.forEach(function (regex, text) {
+                    choices.set(text, regex);
+                });
+            } else {
+                choices.set(other.getText(), other);
+            }
+            return new REChoice(choices);
+        };
+        REChoice.prototype.concat = function (other)
+        {
+            if (other === REEmptyInstance) {
+                return other.concat(this);
+            } else if (other instanceof REConcat) {
+                return other.cloneWithItemPrepended(this);
+            }
+
+            if (other instanceof RERepeat &&
+                !other.nonZero &&
+                other.item.getText() == this.getText()) {
+                return new RERepeat(other.item, true);
+            }
+
+            return new REConcat([
+                this, other
+            ]);
+        };
+        REChoice.prototype.makeRepeat = function ()
+        {
+            var foundNonRepeating = false;
+            this.choices.forEach((e) => {
+                if (!(e instanceof RERepeat) ||
+                    e.nonZero) {
+                    foundNonRepeating = true;
+                }
+            });
+            if (!foundNonRepeating) {
+                return this;
+            }
+            return new RERepeat(this, false);
+        };
+
+        function REConcat(items)
+        {
+            this.items = items; // RENode[]
+            this.regex = null;
+        }
+        REConcat.prototype.getText = function () {
+            return this.regex || (this.regex = this.items.map(c=>c.getText()).join(""));
+        };
+        REConcat.prototype.cloneWithItemAppended = function (newItem)
+        {
+            var items = this.items.slice(0);
+            items.push(newItem);
+            return new REConcat(items);
+        };
+        REConcat.prototype.cloneWithItemPrepended = function (newItem)
+        {
+            var items = this.items.slice(0);
+            items.unshift(newItem);
+            return new REConcat(items);
+        };
+        REConcat.prototype.or = function (other)
+        {
+            if (other === REEmptyInstance ||
+                other instanceof REChoice) {
+                return other.or(this);
+            } else {
+                return new REChoice(new Map([
+                    [this.getText(), this],
+                    [other.getText(), other]
+                ]));
+            }
+        };
+        REConcat.prototype.concat = function (other)
+        {
+            if (other === REEmptyInstance) {
+                return this;
+            }
+
+            if (other instanceof RERepeat &&
+                !other.nonZero &&
+                other.item.getText() == this.getText()) {
+                return new RERepeat(other.item, true);
+            }
+
+            return this.cloneWithItemAppended(other);
+        };
+        REConcat.prototype.makeRepeat = function ()
+        {
+            return new RERepeat(this, false);
+        };
+
+        function RETerminal(text)
+        {
+            this.text = text;
+            this.regex = null;
+        }
+        RETerminal.prototype.getText = function () {
+            return this.regex || (this.regex = this.text); // TODO
+        };
+        RETerminal.prototype.or = function (other) {
+            if (other instanceof RETerminal) {
+                if (other.text == this.text) {
+                    return this;
+                } else {
+                    return new REChoice(new Map([
+                        [this.getText(), this],
+                        [other.getText(), other]
+                    ]));
+                }
+            } else if (other instanceof RERepeat) {
+                if (other.item.getText() == this.getText()) {
+                    return other;
+                } else {
+                    return new REChoice(new Map([
+                        [this.getText(), this],
+                        [other.getText(), other]
+                    ]));
+                }
+            } else {
+                return other.or(this);
+            }
+        };
+        RETerminal.prototype.concat = function (other) {
+            if (other instanceof RETerminal) {
+                return new RETerminal(this.text + other.text);
+            } else if (other === REEmptyInstance) {
+                return this;
+            } else if (other instanceof REConcat) {
+                return other.cloneWithItemPrepended(this);
+            } else if (other instanceof RERepeat) {
+                if (other.item.getText() == this.getText() &&
+                    !other.nonZero) {
+                    return new RERepeat(this, true);
+                }
+            }
+            return new REConcat([
+                this, other
+            ]);
+        };
+        RETerminal.prototype.makeRepeat = function ()
+        {
+            return new RERepeat(this, false);
+        };
+
+        function RERepeat(item, nonZero)
+        {
+            this.item = item;
+            this.nonZero = nonZero;
+            this.regex = null;
+        }
+        RERepeat.prototype.getText = function () {
+            return this.regex || (this.regex = (() => {
+                var parts = [];
+                if ((this.item instanceof RETerminal && this.item.text.length == 1) ||
+                    (this.item instanceof REChoice)) {
+                    parts.push(this.item.getText());
+                } else {
+                    parts.push("(");
+                    parts.push(this.item.getText());
+                    parts.push(")");
+                }
+                parts.push(this.nonZero ? "+" : "*");
+                return parts.join("");
+            })());
+        };
+        RERepeat.prototype.or = function (other) {
+            if (other instanceof RERepeat) {
+                if (this.item.getText() == other.item.getText())
+                    return new RERepeat(this.item, this.nonZero && other.nonZero);
+                return new REChoice(new Map([
+                    [this.getText(), this],
+                    [other.getText(), other]
+                ]));
+            }
+            return other.or(this);
+        };
+        RERepeat.prototype.concat = function (other) {
+            if (other instanceof RERepeat &&
+                this.item.getText() == other.item.getText()) {
+                if (!this.nonZero && !other.nonZero)
+                    return this;
+                if (!this.nonZero || !other.nonZero)
+                    return new RERepeat(this.item, true);
+            } else if (other instanceof REConcat) {
+                return other.cloneWithItemPrepended(this);
+            } else if (!this.nonZero && other.getText() == this.getText()) {
+                if (!this.nonZero || !other.nonZero)
+                    return new RERepeat(this.item, true);
+            } else {
+                return new REConcat([this, other]);
+            }
+        };
+        RERepeat.prototype.makeRepeat = function ()
+        {
+            return new RERepeat(this.item, false);
+        };
+
+        var start = new State();
+        var end = new State();
+        var states = [];
+
+        var digitsRE = [];
+        for (var i = 0; i < digits.length; ++i) {
+            digitsRE.push(new RETerminal(digits.substr(i, 1)));
+        }
+
+        function makeTransition(src, dest, regex)
+        {
+            var outflow = src.outflow.get(dest);
+            if (outflow == null) {
+                src.outflow.set(dest, regex);
+            } else {
+                src.outflow.set(dest, outflow.or(regex));
+            }
+
+            var inflow = dest.inflow.get(src);
+            if (inflow == null) {
+                dest.inflow.set(src, regex);
+            } else {
+                dest.inflow.set(src, inflow.or(regex));
+            }
+        }
+
+        for (var i = 0; i < intValue; ++i) {
+            states.push(new State());
+        }
+
+        // start with non-zero or single zero
+        makeTransition(start, end, digitsRE[0]);
+        for (var j = 1; j < digits.length; ++j) {
+            var tgt = j % intValue;
+            makeTransition(start, states[tgt], digitsRE[j]);
+        }
+        makeTransition(states[0], end, REEmptyInstance);
+
+        for (var i = 0; i < intValue; ++i) {
+            for (var j = 0; j < digits.length; ++j) {
+                var tgt = (i * digits.length + j) % intValue;
+                makeTransition(states[i], states[tgt], digitsRE[j]);
+            }
+        }
+
+        function eliminateState(state)
+        {
+            var cycle = state.outflow.get(state);
+            if (cycle) {
+                cycle = cycle.makeRepeat();
+            } else {
+                cycle = REEmptyInstance;
+            }
+
+            state.inflow.forEach(function (inRE, inState) {
+                if (inState == state) {
+                    return;
+                }
+                state.outflow.forEach(function (outRE, outState) {
+                    if (outState == state) {
+                        return;
+                    }
+                    var re = inRE.concat(cycle).concat(outRE);
+                    if (inState == outState && re instanceof RERepeat) {
+                        makeTransition(inState, outState, re.item);
+                    }
+                    makeTransition(inState, outState, re);
+                });
+            });
+
+            state.inflow.forEach(function (inRE, inState) {
+                state.inflow.delete(inState);
+                inState.outflow.delete(state);
+            });
+            state.outflow.forEach(function (outRE, outState) {
+                state.outflow.delete(outState);
+                outState.inflow.delete(state);
+            });
+        }
+
+        for (var i = 0; i < states.length; ++i) {
+            eliminateState(states[i]);
+        }
+
+        var startCycle = start.outflow.get(start);
+        var startToEnd = start.outflow.get(end);
+        var endToStart = start.inflow.get(end);
+        var endCycle = end.outflow.get(end);
+
+        if (startToEnd == null) {
+            throw new Error("empty regex!");
+        }
+
+        if (startCycle) {
+            startCycle = startCycle.makeRepeat();
+        } else {
+            startCycle = REEmptyInstance;
+        }
+        if (endCycle) {
+            endCycle = endCycle.makeRepeat();
+        } else {
+            endCycle = REEmptyInstance;
+        }
+
+        var re;
+        if (endToStart) {
+            re = endToStart
+                .concat(startCycle)
+                .concat(startToEnd);
+            re = startCycle
+                .concat(startToEnd)
+                .concat(re.makeRepeat());
+        } else {
+            re = startCycle
+                .concat(startToEnd);
+        }
+
+        return re.getText();
+    }
+    $("#runButton").click(function () {
+        var intValue = parseInt($("#valueField").val());
+        var digits = $("#baseField").val();
+        var regex = constructRegexForMultiples(intValue, digits);
+        $("pre").text(regex);
+    });
+});
+        </script>
+    </body>
+</html>
