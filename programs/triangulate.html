@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>Triangulate (author: @YVT)</title>
+    </head>
+    <body>
+        <canvas id="canvas" width="512" height="512">
+        <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script type="text/javascript">
+$(function() {
+
+    var map = new Array();
+    var size = 16;
+    var panelSize = 32;
+    for(var i = size * size; i > 0; i--) map.push(0);
+
+    function getPanel(x, y) { if(y >= size || y < 0) return 0; else return map[(x|0) * (size|0) + (y|0)]; }
+    function setPanel(x, y, v) { map[(x|0) * (size|0) + (y|0)] = v|0; }
+
+    function searchSpan(x, y) {
+        while(x < size && !getPanel(x, y)) {
+            x++;
+        }
+        if(x >= size) {
+            return null;
+        }
+        while(x > 0 && getPanel(x - 1, y)) {
+            x--;
+        }
+        var x1 = x;
+        while(x < size && getPanel(x, y)) {
+            x++;
+        }
+        return {x1: x1, x2: x};
+    }
+
+    function triangulate() {
+        var polys = [];
+        var spans = []; // {x1:int, x2:int, xs:int array}
+        var x, y;
+        var lastProcessed = [];
+
+        var lastLeftEdgeY = [];
+        var lastLeftEdge = [];
+        var lastRightEdgeY = [];
+        var lastRightEdge = [];
+
+        for(x = 0; x < size; x++) {
+            lastProcessed.push(-1);
+            lastLeftEdgeY.push(-1);
+            lastRightEdgeY.push(-1);
+            lastLeftEdge.push(null);
+            lastRightEdge.push(null);
+        }
+
+        function emitEdge(edge, flipped) {
+
+            function side(p1, p2, p3) {
+                var x1 = p2.x - p1.x, y1 = p2.y - p1.y;
+                var x2 = p3.x - p1.x, y2 = p3.y - p1.y;
+                var area = x2 * y1 - x1 * y2;
+                if(flipped) return area <= 0;
+                else return area >= 0;
+            }
+
+            var stack = [];
+            stack.push(0);
+            stack.push(1);
+            for(var i = 2; i < edge.length; i++) {
+                var j;
+                j = stack.pop();
+                while(true) {
+                    if(stack.length == 0) {
+                        stack.push(j);
+                        break;
+                    }
+                    var k = stack.pop();
+                    if(side(edge[j], edge[k], edge[i])) {
+                        polys.push(edge[j], edge[k], edge[i]);
+                    }else{
+                        stack.push(k);
+                        stack.push(j);
+                        break;
+                    }
+                    j = k;
+                }
+                stack.push(i);
+            }
+
+            /*
+            var a = 1, b = 0;
+            while(a !== b) {
+
+                var aa = a + 1;
+                if(aa >= edge.length) aa = 0;
+
+                if(aa === b) break;
+
+                var bb = (b == 0) ? edge.length - 1 : b - 1;
+
+                if(side(edge[b], edge[aa], edge[a])) {
+                    polys.push(edge[b], edge[aa], edge[a]);
+                    a = aa;
+                }else if(side(edge[a], edge[b], edge[bb])){
+                    polys.push(edge[a], edge[b], edge[bb]);
+                    b = bb;
+                }else{
+                    debugger;
+                    break;
+                }
+            }*/
+
+        }
+
+        for(y = 0; y <= size; y++) {
+
+            // check current spans
+            for(var k = spans.length - 1; k >= 0; k--) {
+                var span = spans[k];
+
+                for(x = span.x1; x < span.x2; x++) {
+                    if(!getPanel(x, y)) {
+                        break;
+                    }
+                }
+
+                var removeSpan = false;
+                if(x < span.x2) {
+                    removeSpan = true;
+                }else if((span.x1 > 0 && getPanel(span.x1 - 1, y)) ||
+                    (span.x2 < size && getPanel(span.x2, y))) {
+                    removeSpan = true;
+                }
+
+                if(removeSpan) {
+                    // terminate current span
+                    var endpoints = [];
+                    if(getPanel(span.x1 - 1, y) || !getPanel(span.x1, y))
+                        endpoints.push(span.x1);
+
+                    var last = getPanel(span.x1, y);
+                    for(x = span.x1 + 1; x < span.x2; x++) {
+                        var p = getPanel(x, y);
+                        if(p != last) {
+                            endpoints.push(x);
+                            last = p;
+                        }
+                    }
+                    if(getPanel(span.x2, y) || !getPanel(span.x2 - 1, y))
+                        endpoints.push(span.x2);
+
+                    var startpoints = span.xs;
+                    var y1 = span.y, y2 = y;
+
+                    if(span.leftEdge !== null) {
+                        span.leftEdge.push({x: endpoints[0], y: y2});
+                    }
+                    if(endpoints[0] > span.x1) {
+                        if(span.leftEdge === null) {
+                            span.leftEdge = [{x: span.x1, y: span.y}, {x: endpoints[0], y: y2}];
+                        }
+                        lastLeftEdge[span.x1] = span.leftEdge;
+                        lastLeftEdgeY[span.x1] = y;
+                    }else{
+                        if(span.leftEdge !== null)
+                            emitEdge(span.leftEdge, false);
+                        span.leftEdge = null;
+                    }
+
+                    if(span.rightEdge !== null) {
+                        span.rightEdge.push({x: endpoints[endpoints.length - 1], y: y2});
+                    }
+                    if(endpoints[endpoints.length - 1] < span.x2) {
+                        if(span.rightEdge === null) {
+                            span.rightEdge = [{x: span.x2, y: span.y}, {x: endpoints[endpoints.length-1], y: y2}];
+                        }
+                        lastRightEdge[span.x2] = span.rightEdge;
+                        lastRightEdgeY[span.x2] = y;
+                    }else{
+                        if(span.rightEdge !== null)
+                            emitEdge(span.rightEdge, true);
+                        span.rightEdge = null;
+                    }
+
+                    for(var i = 1; i < endpoints.length; i++) {
+                        polys.push({x: startpoints[0], y: y1});
+                        polys.push({x: endpoints[i - 1], y: y2});
+                        polys.push({x: endpoints[i], y: y2});
+                    }
+                    for(var i = 1; i < startpoints.length; i++) {
+                        polys.push({x: startpoints[i - 1], y: y1});
+                        polys.push({x: startpoints[i], y: y1});
+                        polys.push({x: endpoints[endpoints.length - 1], y: y2});
+                    }
+
+                    spans.splice(k, 1);
+                }
+
+                // -- one span done
+            }
+
+            for(var k = 0; k < spans.length; k++) {
+                var span = spans[k];
+                lastProcessed[span.x1] = y;
+            }
+
+            // new span discovery
+            x = 0;
+            while(true) {
+                var sp = searchSpan(x, y);
+                if(sp === null) {
+                    break;
+                }
+                if(lastProcessed[sp.x1] < y) {
+                    // new span found
+
+                    var leftEdge = lastLeftEdgeY[sp.x1] >= y ? lastLeftEdge[sp.x1] : null;
+                    var rightEdge = lastRightEdgeY[sp.x2] >= y ? lastRightEdge[sp.x2] : null;
+
+                    var beginpoints = [];
+                    if(getPanel(sp.x1 - 1, y - 1) || !getPanel(sp.x1, y - 1))
+                        beginpoints.push(sp.x1);
+                    var last = getPanel(sp.x1, y - 1);
+                    for(x = sp.x1 + 1; x < sp.x2; x++) {
+                        var p = getPanel(x, y - 1);
+                        if(p != last) {
+                            beginpoints.push(x);
+                            last = p;
+                        }
+                    }
+                    if(getPanel(sp.x2, y - 1) || !getPanel(sp.x2 - 1, y - 1))
+                        beginpoints.push(sp.x2);
+
+                    spans.push({
+                        x1: sp.x1, x2: sp.x2, xs: beginpoints, y: y,
+                        leftEdge: leftEdge,
+                        rightEdge: rightEdge
+                    });
+                }
+                x = sp.x2 + 1;
+            }
+
+        }
+        return polys;
+    }
+
+    function render() {
+        var ctx = $('#canvas')[0].getContext('2d');
+        ctx.clearRect(0, 0, 512, 512);
+
+        var cells = 0;
+        for(var x = 0; x < size; x++) {
+            for(var y = 0; y < size; y++) {
+                var cx = x * panelSize;
+                var cy = y * panelSize;
+                if(getPanel(x, y)) {
+                    ctx.fillStyle = "gray";
+                    cells++;
+                }else{
+                    ctx.fillStyle = "silver";
+                }
+                ctx.fillRect(cx, cy, panelSize - 1, panelSize - 1);
+            }
+        }
+
+        var polys = triangulate();
+        ctx.fillStyle = "rgba(255,0,0,0.5)";
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+        ctx.lineWidth = 1;
+        document.title = String(polys.length / 3) + " polys / " + String(cells) + " cells";
+        for(var i = 0; i < polys.length; i += 3) {
+            ctx.beginPath();
+            ctx.moveTo(polys[i].x * panelSize, polys[i].y * panelSize);
+            ctx.lineTo(polys[i + 1].x * panelSize, polys[i + 1].y * panelSize);
+            ctx.lineTo(polys[i + 2].x * panelSize, polys[i + 2].y * panelSize);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+    }
+
+    render();
+    $('#canvas').mousedown(function(e) {
+        var x = e.pageX - $(this).offset().left;
+        var y = e.pageY - $(this).offset().top;
+        x = Math.floor(x / panelSize);
+        y = Math.floor(y / panelSize);
+        if(x >= 0 && y >= 0 && x < size && y < size) {
+            setPanel(x, y, getPanel(x,y) ? 0 : 1);
+            render();
+        }
+    });
+
+});
+
+
+
+
+        </script>
+    </body>
+</html>
