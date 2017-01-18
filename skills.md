@@ -17,6 +17,7 @@ Fields
 | Machine learning  | 🌟🌟・・・    |  2016 |
 | Networking        | 🌟🌟🌟・・     |  2006 |
 | Operating systems | 🌟🌟🌟・・     |  2014 |
+| Type Theory       | 🌟・・・・   |  2014 |
 | Web               | 🌟🌟🌟🌟・      |  2002 |
 
 
@@ -67,6 +68,7 @@ Languages
 | Python                        | 🌟🌟🌟🌟・      | 2014  |            | Python 3.x          |
 | QBASIC                        | 🌟🌟🌟・・     | 2001  | QBASIC 1.0 |                     |
 | Ruby                          | 🌟🌟🌟🌟・      | 2012  |            | Ruby 2.x            |
+| Rust                          | 🌟🌟・・・    | 2015  |            | Rust 1.14.0         |
 | SASS / SCSS                   | 🌟🌟🌟・・     | 2015  |            |                     |
 | SML                           | 🌟🌟・・・    | 2013  |            |                     |
 | SQL                           | 🌟🌟🌟・・     | 2010  |            |                     |
@@ -85,6 +87,7 @@ My own creations: Queen
 
 - Japanese ― native language
 - English
+    - TOEIC 985
 
 Technologies
 ------------
@@ -135,12 +138,12 @@ My own creations: tcw, tcwtecs, tcw2
 
 ### Computer Architectutres
 
-| Technology | Proficiency | Since |
-| ---------- | ----------- | ----- |
-| x86        | 🌟🌟・・・    | ?     |
-| x86_64     | 🌟🌟・・・    | ?     |
-| ARM-A      | 🌟🌟・・・    | 2009  |
-| ARM-M      | 🌟🌟🌟🌟・      | 2012  |
+| Technology | Proficiency | Since | Latest Used Version |
+| ---------- | ----------- | ----- | ------------------- |
+| x86        | 🌟🌟・・・    | ?     |                     |
+| x86_64     | 🌟🌟・・・    | ?     |                     |
+| ARM-A      | 🌟🌟・・・    | 2009  |                     |
+| ARM-M      | 🌟🌟🌟🌟・      | 2012  | ARMv8-M             |
 
 ### Game Engines
 
@@ -163,6 +166,16 @@ My own creations: tcw, tcwtecs, tcw2
 | ---------- | ----------- | ----- | ------------------- |
 | jQuery     | 🌟🌟🌟🌟・      | ?     | jQuery 2.x          |
 | React      | 🌟🌟🌟・・     | 2015  |                     |
+| Vue        | 🌟🌟・・・    | 2016  |                     |
+| three.js   | 🌟🌟・・・    | 2015  |                     |
+
+### Development Tools
+
+| Technology | Proficiency | Since | Latest Used Version |
+| ---------- | ----------- | ----- | ------------------- |
+| make       | 🌟🌟🌟🌟・      | ?     |                     |
+| CMake      | 🌟🌟・・・    | ?     |                     |
+| gulp       | 🌟🌟🌟・・     | ?     |                     |
 
 
 Softwares
@@ -173,6 +186,12 @@ Softwares
 - vim
 - Sublime Text
 - Atom
+
+### IDEs
+
+- Visual Studio
+- Visual Studio Code
+- Xcode (mainly C++ project)
 
 ### Graphics
 
@@ -185,7 +204,7 @@ Softwares
     - Still Image Creation
 - Mirye Shade 3D 9 (outdated)
 - NewTek LightWave 9? (outdated)
-- Substance Painter (learning)
+- Substance Painter (still learning)
 - GIMP
 - Inkscape
 - Procreate
