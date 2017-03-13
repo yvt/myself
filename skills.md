@@ -244,4 +244,11 @@ Qualifications
 
 - Applied Information Technology Enginner Examination
 - Embedded Systems Specialist Examination
+- TOEIC Score: 985
+
+Licenses
+--------
+
+- Class 1 Driving License for Ordinary Vehicles
+- Amateur Radio
 
