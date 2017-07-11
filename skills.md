@@ -51,7 +51,7 @@ Languages
 | D                             | 🌟・・・・   | ?     |            |                     |
 | F#                            | 🌟🌟・・・    | 2013  |            |                     |
 | Go                            | 🌟🌟🌟🌟・      | 2014  |            |                     |
-| GLSL                          | 🌟🌟🌟🌟・      | 2009  | 1.00       |                     |
+| GLSL                          | 🌟🌟🌟🌟・      | 2009  | 4.50       |                     |
 | Haskell                       | 🌟・・・・   | 2013  |            |                     |
 | Haxe                          | 🌟🌟🌟🌟・      | 2014  |            |                     |
 | HLSL                          | 🌟・・・・   | 2007  |            |                     |
@@ -68,7 +68,7 @@ Languages
 | Python                        | 🌟🌟🌟🌟・      | 2014  |            | Python 3.x          |
 | QBASIC                        | 🌟🌟🌟・・     | 2001  | QBASIC 1.0 |                     |
 | Ruby                          | 🌟🌟🌟🌟・      | 2012  |            | Ruby 2.x            |
-| Rust                          | 🌟🌟🌟🌟・    | 2015  |            | Rust 1.18.0         |
+| Rust                          | 🌟🌟🌟🌟・      | 2015  |            | Rust 1.20.0         |
 | SASS / SCSS                   | 🌟🌟🌟・・     | 2015  |            |                     |
 | SML                           | 🌟🌟・・・    | 2013  |            |                     |
 | SQL                           | 🌟🌟🌟・・     | 2010  |            |                     |
@@ -100,7 +100,9 @@ Technologies
 | Microsoft Access | 🌟🌟🌟🌟・      |  2014 |                     |
 | MySQL            | 🌟🌟🌟🌟・      |  2010 |                     |
 | MongoDB          | 🌟🌟🌟・・     |  2013 |                     |
-| SQLite           | 🌟🌟🌟・・     |       |                     |
+| SQLite           | 🌟🌟🌟・・     |       | SQLite 3.x          |
+| Apache Cassandra | 🌟・・・・   |       |                     |
+| RedisDB          | 🌟・・・・   |       |                     |
 
 My own creations: sqdb, StellaDB
 
@@ -112,6 +114,7 @@ My own creations: sqdb, StellaDB
 | OpenGL     | 🌟🌟🌟🌟・      |  2007 | OpenGL 3.x          |
 | WebGL      | 🌟🌟🌟🌟🌟       |  2013 | WebGL 1.0           |
 | OpenGL ES  | 🌟🌟🌟🌟・      |  2010 | OpenGL ES 2.0       |
+| Vulkan     | 🌟🌟🌟・・     |  2017 | Vulkan 1.0          |
 
 ### GUI Library / Toolkits
 
@@ -126,6 +129,7 @@ My own creations: sqdb, StellaDB
 | System.Windows.Forms | 🌟🌟🌟🌟・      | 2006  |                     |
 | Cocoa                | 🌟🌟・・・    | 2008  |                     |
 | Cocoa Touch          | 🌟🌟・・・    | 2008  |                     |
+| winit                | 🌟🌟・・・    | 2017  |                     |
 
 My own creations: tcw, tcwtecs, tcw2
 
@@ -145,6 +149,13 @@ My own creations: tcw, tcwtecs, tcw2
 | ARM-A      | 🌟🌟・・・    | 2009  |                     |
 | ARM-M      | 🌟🌟🌟🌟・      | 2012  | ARMv8-M             |
 
+### Virtual Machine Architectures
+
+| Technology | Proficiency | Since | Latest Used Version |
+| ---------- | ----------- | ----- | ------------------- |
+| CLI        | 🌟🌟🌟🌟・      |  2014 |                     |
+| SPIR-V     | 🌟🌟🌟・・     |  2017 |                     |
+
 ### Game Engines
 
 |   Technology  | Proficiency | Since | Latest Used Version |
@@ -153,6 +164,7 @@ My own creations: tcw, tcwtecs, tcw2
 | Unity         | 🌟🌟・・・    | ?     | Unity 5             |
 | Cocos Creator | 🌟🌟・・・    | 2016  | Cocos Creator 1.x   |
 | Unreal Engine | 🌟・・・・   | ?     | Unreal Engine 4     |
+| CRY ENGINE    | 🌟・・・・   | 2017  | CRY ENGINE V        |
 
 ### Machine Learning
 
@@ -166,7 +178,7 @@ My own creations: tcw, tcwtecs, tcw2
 | ---------- | ----------- | ----- | ------------------- |
 | jQuery     | 🌟🌟🌟🌟・      | ?     | jQuery 2.x          |
 | React      | 🌟🌟🌟・・     | 2015  |                     |
-| Vue        | 🌟🌟・・・    | 2016  |                     |
+| Vue        | 🌟🌟🌟🌟・      | 2016  | Vue 2.x             |
 | three.js   | 🌟🌟・・・    | 2015  |                     |
 
 ### Development Tools
